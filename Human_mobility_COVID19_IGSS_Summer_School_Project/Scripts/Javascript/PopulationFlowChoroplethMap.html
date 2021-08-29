@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Choropleth Map</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.3/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.3.3/dist/leaflet.js"></script>
+</head>
+
+<body>
+ <div id="mapid" style="width: 2000px; height: 1000px;"></div>
+
+</body>
+</html>
+
+<script type="text/javascript" src="tw_2020_out.js"></script>
+
+<script type="text/javascript">
+var map = L.map('mapid').setView([31.986217,-100.056376], 4);
+var mbAttr = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+var mbURL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+var lyrMbStreet = L.tileLayer(mbURL,{attribution: mbAttr,noWrap: true}).addTo(map);
+map.addLayer(lyrMbStreet);
+
+// http://colorbrewer2.org/#type=sequential&scheme=OrRd&n=5
+function getColor_out(d) {
+  return d > 2000  ? '#0B1746' :
+         d > 1500  ? '#082E54' :
+         d > 1000  ? '#191970' :
+         d > 800   ? '#3D59AB' :
+         d > 500   ? '#0000FF' :
+         d > 300   ? '#1E90FF' :
+         d > 200   ? '#6A5ACD' :
+         d > 100   ? '#33A1C9' :
+         d > 50    ? '#87CEEB' :
+                          '#F0FFFF';
+}
+
+function getColor_in(d) {
+	  return d > 2000  ? '#5E2612' :
+	         d > 1500  ? '#802A2A' :
+	         d > 1000  ? '#873324' :
+	         d > 800   ? '#8B4513' :
+	         d > 500   ? '#A0522D' :
+	         d > 300   ? '#D2691E' :
+	         d > 200   ? '#FF7D40' :
+	         d > 100   ? '#F4A460' :
+	         d > 50    ? '#F0E68C' :
+	                          '#D2B48C';
+	}
+
+function setStyle(feature) {
+  return {
+      fillColor: getColor_out(feature.properties.density),
+      //fillColor: getColor_in(feature.properties.density),
+      fillOpacity: 0.8,
+      weight: 1.0, //boarder
+      color: 'white' //boarder
+  };
+}
+
+function onEachFeature(feature, layer) {
+    layer.on("click",zoomToFeature);
+    
+    if (feature.properties && feature.properties.name) {
+        layer.bindPopup(feature.properties.name +"<br>"+
+        		        feature.properties.density+"  people");
+    }
+}
+
+function zoomToFeature(e) {
+	console.info(e);
+    map.fitBounds(e.target.getBounds()); //or use: e.target._bounds
+}
+
+
+var stateLayer = L.geoJson(statesData, {
+    style: setStyle,
+    onEachFeature:onEachFeature
+});
+
+map.addLayer(stateLayer);
+
+var baseLayer = {"MapBox":streetLayer};
+var overlays = {"State Population":stateLayer};
+L.control.layers(baseLayer,overlays).addTo(map);
+
+	
+</script>
